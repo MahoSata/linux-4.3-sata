@@ -16,6 +16,8 @@
 #include <linux/jhash.h>
 #include <net/tcp.h>
 
+#include <linux/sata_tcp.h>
+
 static DEFINE_SPINLOCK(tcp_cong_list_lock);
 static LIST_HEAD(tcp_cong_list);
 
@@ -424,12 +426,22 @@ void tcp_reno_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 }
 EXPORT_SYMBOL_GPL(tcp_reno_cong_avoid);
 
+static int sata_x = 0;
+static int sata_y = 0;
+EXPORT_SYMBOL(sata_x);
+EXPORT_SYMBOL(sata_y);
+
 /* Slow start threshold is half the congestion window (min 2) */
 u32 tcp_reno_ssthresh(struct sock *sk)
 {
 	const struct tcp_sock *tp = tcp_sk(sk);
+	u32 val;
 
-	return max(tp->snd_cwnd >> 1U, 2U);
+	//return max(tp->snd_cwnd >> 1U, 2U);
+	if (unlikely(sata_x == 0))
+		sata_x = 1;
+	val = (tp->snd_cwnd >> 1U) + (sata_y * (tp->snd_cwnd / sata_x));
+	return max(val, 2U);
 }
 EXPORT_SYMBOL_GPL(tcp_reno_ssthresh);
 
